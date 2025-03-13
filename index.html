@@ -1,1 +1,196 @@
-Hello World
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор Steam</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #eef2f3;
+        }
+        .container {
+            width: 90%;
+            max-width: 600px;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border-radius: 15px;
+        }
+        select, input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .hidden {
+            display: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+            border-radius: 5px;
+        }
+        th {
+            background-color: #007BFF;
+            color: white;
+        }
+        .priceInput, .result, .difference {
+            width: 90%;
+            margin-left: -3%;
+        }
+        .nameInput {
+            width: 90%;
+            margin-left: -3%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="step1">
+        <h2>Выбор валюты</h2>
+        <label>Выберите валюту баланса Steam:</label>
+        <select id="balanceCurrency">
+            <option value="Рубли">Рубли</option>
+            <option value="Тенге">Тенге</option>
+            <option value="Доллары">Доллары</option>
+            <option value="Евро">Евро</option>
+            <option value="Гривны">Гривны</option>
+        </select>
+        <label>Выберите валюту пополнения:</label>
+        <select id="depositCurrency">
+            <option value="Рубли">Рубли</option>
+            <option value="Тенге">Тенге</option>
+            <option value="Доллары">Доллары</option>
+            <option value="Евро">Евро</option>
+            <option value="Гривны">Гривны</option>
+        </select>
+        <button onclick="nextStep(1)">Далее</button>
+    </div>
+
+    <div class="container hidden" id="step2">
+        <h2>Выбор метода расчёта курса</h2>
+        <button onclick="manualInput()">Ввести курс вручную</button>
+        <button onclick="autoCalculate()">Рассчитать автоматически</button>
+        <div id="manualInputDiv" class="hidden">
+            <label>Введите курс:</label>
+            <input type="number" id="manualRate" step="0.01">
+            <button onclick="saveManualRate()">Сохранить курс</button>
+        </div>
+        <div id="autoInputDiv" class="hidden">
+            <label>Введите сумму пополнения:</label>
+            <input type="number" id="depositAmount" step="0.01">
+            <label>Введите полученную сумму:</label>
+            <input type="number" id="receivedAmount" step="0.01">
+            <button onclick="calculateRate()">Рассчитать курс</button>
+        </div>
+    </div>
+
+    <div class="container hidden" id="step3">
+        <h2>Калькулятор стоимости в Steam</h2>
+        <label>Текущий баланс Steam:</label>
+        <input type="number" id="steamBalance" step="0.01">
+        <table>
+            <tr>
+                <th>Название</th>
+                <th>Цена</th>
+                <th>Стоимость</th>
+                <th>Разница</th>
+            </tr>
+            <script>
+                for (let i = 0; i < 5; i++) {
+                    document.write(`
+                    <tr>
+                        <td><input type="text" class="nameInput"></td>
+                        <td><input type="number" class="priceInput" step="0.01" oninput="updatePrices(${i})"></td>
+                        <td><input type="text" class="result" readonly></td>
+                        <td><input type="text" class="difference" readonly></td>
+                    </tr>
+                    `);
+                }
+            </script>
+        </table>
+    </div>
+
+    <script>
+        let currentRate = 1; // По умолчанию курс равен 1
+
+        function nextStep(step) {
+            let balanceCurrency = document.getElementById("balanceCurrency").value;
+            let depositCurrency = document.getElementById("depositCurrency").value;
+            if (!balanceCurrency || !depositCurrency) {
+                alert("Пожалуйста, выберите валюты.");
+                return;
+            }
+            document.getElementById("step" + step).classList.add("hidden");
+            document.getElementById("step" + (step + 1)).classList.remove("hidden");
+        }
+
+        function manualInput() {
+            document.getElementById("manualInputDiv").classList.remove("hidden");
+        }
+
+        function saveManualRate() {
+            let rate = parseFloat(document.getElementById("manualRate").value);
+            if (!rate) {
+                alert("Введите корректный курс.");
+                return;
+            }
+            currentRate = rate; // Сохраняем введенный курс
+            nextStep(2);
+        }
+
+        function autoCalculate() {
+            document.getElementById("autoInputDiv").classList.remove("hidden");
+        }
+
+        function calculateRate() {
+            let depositAmount = parseFloat(document.getElementById("depositAmount").value);
+            let receivedAmount = parseFloat(document.getElementById("receivedAmount").value);
+            if (!depositAmount || !receivedAmount || receivedAmount === 0) {
+                alert("Введите корректные значения.");
+                return;
+            }
+            currentRate = depositAmount / receivedAmount; // Сохраняем рассчитанный курс
+            alert("Текущий курс: " + currentRate);
+            nextStep(2);
+        }
+
+        function updatePrices(rowIndex) {
+            let priceInputs = document.getElementsByClassName("priceInput");
+            let results = document.getElementsByClassName("result");
+            let differences = document.getElementsByClassName("difference");
+            let balance = parseFloat(document.getElementById("steamBalance").value) || 0;
+
+            let price = parseFloat(priceInputs[rowIndex].value) || 0;
+            let cost = price * currentRate; // Стоимость с учетом курса
+            let difference = (price - balance) * currentRate; // Разница с учетом курса
+
+            results[rowIndex].value = cost;
+            differences[rowIndex].value = difference;
+        }
+    </script>
+</body>
+</html>
